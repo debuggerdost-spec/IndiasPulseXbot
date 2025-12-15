@@ -69,6 +69,35 @@ def clean_html(raw_html):
 
 previous_titles = set()
 
+# ================================
+# IPL / CRICKET KEYWORDS (ADDON)
+# ================================
+IPL_KEYWORDS = [
+    "ipl", "indian premier league",
+    "ms dhoni", "dhoni",
+    "csk", "chennai super kings",
+    "rcb", "royal challengers",
+    "mi", "mumbai indians",
+    "kkr", "kolkata knight riders",
+    "srh", "sunrisers hyderabad",
+    "rr", "rajasthan royals",
+    "dc", "delhi capitals",
+    "lsg", "lucknow super giants",
+    "gt", "gujarat titans",
+    "cricket", "t20"
+]
+
+def is_ipl_related(topic):
+    text = f"{topic['title']} {topic['description']}".lower()
+    return any(keyword in text for keyword in IPL_KEYWORDS)
+
+def get_ipl_topics(topics):
+    """Filters IPL / cricket related topics.
+    SAFE ADDON – fallback to normal news if none found.
+    """
+    return [t for t in topics if is_ipl_related(t)]
+
+
 def search_image_bing(query):
     try:
         q = query.replace(" ", "+")
@@ -156,7 +185,14 @@ def run_bot(interval=3600):
             print("⚠️ No topics returned.")
             return
 
-        topic = random.choice(topics)
+        ipl_topics = get_ipl_topics(topics)
+
+        if ipl_topics and random.random() < 0.3:
+            topic = random.choice(ipl_topics)
+            print("🏏 IPL mode activated!")
+        else:
+            topic = random.choice(topics)
+
         tweet_text = create_tweet_text(topic)
 
         if not tweet_text:
@@ -189,3 +225,4 @@ def run_bot(interval=3600):
 # ================================
 if __name__ == "__main__":
     run_bot(interval=3600)
+
